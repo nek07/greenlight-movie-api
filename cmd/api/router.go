@@ -20,5 +20,6 @@ func (app *application) routes() *httprouter.Router {
 	// Add the route for the POST /v1/users endpoint.
 	router.HandlerFunc(http.MethodPost, "/v1/users", app.registerUserHandler)
 	router.HandlerFunc(http.MethodPut, "/v1/users/activated", app.activateUserHandler)
+	router.HandlerFunc(http.MethodPost, "/v1/users/authentication", app.createAuthenticationTokenHandler)
 	return router
 }
