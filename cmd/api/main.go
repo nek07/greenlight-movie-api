@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -35,6 +36,9 @@ type config struct {
 		password string
 		sender   string
 	}
+	cors struct {
+		trustedOrigins []string
+	}
 }
 
 type application struct {
@@ -61,6 +65,11 @@ func main() {
 	flag.IntVar(&cfg.smtp.port, "smtp-port", 25, "SMTP port")
 	flag.StringVar(&cfg.smtp.username, "smtp-username", "b32ea9f7ef3196", "SMTP username")
 	flag.StringVar(&cfg.smtp.password, "smtp-password", "c01f5c13073a76", "SMTP password")
+	flag.Func("cors-trusted-origins", "Trusted CORS origins (space separated)", func(val string) error {
+		cfg.cors.trustedOrigins = strings.Fields(val)
+		return nil
+	})
+
 	flag.StringVar(&cfg.smtp.sender, "smtp-sender", "Greenlight <no-reply@greenlight.abylay.net>", "SMTP sender")
 	flag.Parse()
 
@@ -81,23 +90,8 @@ func main() {
 		mailer: mailer.New(cfg.smtp.host, cfg.smtp.port, cfg.smtp.username, cfg.smtp.password, cfg.smtp.sender),
 	}
 
-	// srv := &http.Server{
-	// 	Addr:         fmt.Sprintf(":%d", cfg.port),
-	// 	Handler:      app.routes(),
-	// 	IdleTimeout:  time.Minute,
-	// 	ReadTimeout:  10 * time.Second,
-	// 	WriteTimeout: 30 * time.Second,
-	// 	ErrorLog:     log.New(logger, "", 0),
-	// }
-
-	// // Start the HTTP server.
-	// logger.PrintInfo("starting server", map[string]string{
-	// 	"addr": srv.Addr,
-	// 	"env":  cfg.env,
-	// })
-	// err = srv.ListenAndServe()
-	// logger.PrintFatal(err, nil)
 	app.serve()
+
 }
 func openDB(cfg config) (*sql.DB, error) {
 	db, err := sql.Open("postgres", cfg.db.dsn)
