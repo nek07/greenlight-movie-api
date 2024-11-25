@@ -48,14 +48,34 @@ db/migrations/up: confirm
 # QUALITY CONTROL
 # ==================================================================================== #
 
+## audit: tidy and vendor dependencies and format, vet and test all code
 .PHONY: audit
-audit:
-	@echo 'Tidying and verifying module dependencies...'
-	go mod tidy 
-	go mod verify 
+audit: vendor
 	@echo 'Formatting code...'
 	go fmt ./...
+	@echo 'Vetting code...'
 	go vet ./...
-	
+	staticcheck ./...
 	@echo 'Running tests...'
 	go test -race -vet=off ./...
+
+## vendor: tidy and vendor dependencies
+.PHONY: vendor
+vendor:
+	@echo 'Tidying and verifying module dependencies...'
+	go mod tidy
+	go mod verify
+	@echo 'Vendoring dependencies...'
+	go mod vendor
+
+## build/api: build the cmd/api applicationls 
+
+.PHONY: build/api
+build/api:
+	@echo "Building for Windows..."
+	go build -ldflags="-s" -o=./bin/api ./cmd/api
+	@echo "Building for Linux..."
+	powershell -Command "Set-Item -Path Env:GOOS -Value 'linux'"
+	go build -ldflags='-s' -o=./bin/linux_amd64/api ./cmd/api
+
+	@echo "SUCCESS"

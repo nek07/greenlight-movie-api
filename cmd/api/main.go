@@ -17,10 +17,13 @@ import (
 	"greenlight.abylay.net/internal/data"
 	"greenlight.abylay.net/internal/jsonlog" // New import
 	"greenlight.abylay.net/internal/mailer"
+	"greenlight.abylay.net/internal/vcs"
 	// New import
 )
 
-const version = "1.0.0"
+var (
+	version = vcs.Version()
+)
 
 type config struct {
 	port int
@@ -74,8 +77,14 @@ func main() {
 	})
 
 	flag.StringVar(&cfg.smtp.sender, "smtp-sender", "Greenlight <no-reply@greenlight.abylay.net>", "SMTP sender")
+
+	displayVersion := flag.Bool("version", false, "Display version and exit")
 	flag.Parse()
 
+	if *displayVersion {
+		fmt.Printf("Version:\t%s\n", version)
+		os.Exit(0)
+	}
 	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
 
 	db, err := openDB(cfg)
